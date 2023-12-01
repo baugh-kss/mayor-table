@@ -1,6 +1,5 @@
 # Import libraries
 import requests
-import json
 import pandas as pd
 from tabulate import tabulate
 
@@ -30,12 +29,45 @@ def Mayors(api_key):
     # Check if the API call was successful
     # If it was, create a pandas table from the json data
     if data and "success" in data:
-        # Create a table from the data
-        candidates = data["mayor"]["election"]["candidates"]
-        df = pd.DataFrame(candidates)
+        # Strip Mayor Data
+        mayor_data = data["mayor"]
+        mayor_name = mayor_data["name"]
+        mayor_key = mayor_data["key"]
+        mayor_perks = pd.json_normalize(mayor_data["perks"])
 
-        print("\nTable of Skyblock election candidates:")
-        print(tabulate(df, headers="keys", tablefmt="fancy_grid", showindex=False))
+        # Create a pandas table from extracted mayor data above
+        df_mayor = pd.DataFrame(
+            {
+                "Mayor Name": [mayor_name] * len(mayor_perks),
+                "Mayor Key": [mayor_key] * len(mayor_perks),
+                "Perk Name": mayor_perks["name"],
+                "Perk Description": mayor_perks["description"],
+            }
+        )
+
+        # Strip Skyblock Election Candidates Data
+        candidates_data = data["mayor"]["election"]["candidates"]
+        election_candidates = pd.json_normalize(candidates_data)
+
+        # Create a pandas table from extracted Skyblock Election Candidates data
+        df_candidates = pd.DataFrame(
+            {
+                "Candidate Name": election_candidates["name"],
+                "Candidate Key": election_candidates["key"],
+                "Perk Name": election_candidates["perks"].apply(lambda x: [p["name"] for p in x]),
+                "Perk Description": election_candidates["perks"].apply(lambda x: [p["description"] for p in x]),
+                "Votes": election_candidates["votes"],
+            }
+        )
+
+        print("\n Mayor Details:")
+        print(tabulate(df_mayor, headers="keys", tablefmt="fancy_grid", showindex=False))
+
+        print("\n Skyblock Election Candidates:")
+        print(tabulate(df_candidates, headers="keys", tablefmt="fancy_grid", showindex=False))
+
+        # print("\nTable of Skyblock election candidates:")
+        # print(tabulate(df, headers="keys", tablefmt="fancy_grid", showindex=False))
 
     else:
         print("Failed to retrieve data from Hypixel API. Please check your API key and try again.")
