@@ -30,7 +30,6 @@ def send_req(url):
 # Function to retrieve and store the latest information
 def update_data():
     global latest_data
-    # api_key = "faaaea25-ee25-4e8c-bca3-f2d57dee54b8"   # Replace with your API key
     url = f"https://api.hypixel.net/resources/skyblock/election?key={api_key}&format=json"
     latest_data = send_req(url)
 
